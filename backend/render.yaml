@@ -3,7 +3,7 @@ services:
     name: receipt-backend-james
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/v1/ingest/health
     envVars:

@@ -10,6 +10,7 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "build": "tsc",
+    "build:render": "npm install --include=dev && tsc",
     "migrate": "tsx src/scripts/migrate.ts",
     "migrate:all": "tsx src/scripts/migrate.ts all",
     "migrate:dev": "APP_ENV=development tsx src/scripts/migrate.ts development",

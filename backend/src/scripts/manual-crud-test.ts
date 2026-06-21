@@ -20,7 +20,7 @@ function log(step: string, detail?: unknown) {
 
 function fail(message: string): never {
   console.error(`\n✗ ${message}`);
-  process.exit(1);
+  throw new Error(message);
 }
 
 function buildPayload(eventId: string) {
