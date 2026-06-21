@@ -244,6 +244,16 @@ const Page: FC = () => {
             ? 'queued'
             : 'synced';
 
+        if (!ingestResult.ok) {
+          toast({
+            variant: 'destructive',
+            title: 'Não salvou no Supabase',
+            description:
+              ingestResult.error ??
+              'Verifique se o backend James está rodando e se RECEIPT_API_URL/RECEIPT_API_KEY no .env.local estão corretos.',
+          });
+        }
+
         const filename = getExportFilename(receiptLabel, options.downloadFormat);
         if (options.downloadFormat === format) {
           downloadDataUrl(data, filename);
