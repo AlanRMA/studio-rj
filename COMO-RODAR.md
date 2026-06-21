@@ -95,14 +95,18 @@ O Next.js está em `frontend/`, **não** na raiz do repositório. Se o build fal
 
 1. [Vercel Dashboard](https://vercel.com/dashboard) → seu projeto → **Settings** → **Build and Deployment**
 2. **Root Directory** → **Edit** → digite `frontend` → **Save**
-3. **Environment Variables** (Production e Preview):
+3. **Framework Preset** → **Next.js** (não deixe em "Other")
+4. **Output Directory** → deixe **vazio** / padrão (não use `public`)
+5. **Environment Variables** (Production e Preview):
 
 | Variável | Valor |
 |----------|-------|
 | `RECEIPT_API_URL` | URL do backend James no Render (sem barra no final) |
 | `RECEIPT_API_KEY` | Mesma `INGEST_API_KEY` do backend |
 
-4. **Redeploy** (Deployments → ⋯ → Redeploy)
+6. **Redeploy** (Deployments → ⋯ → Redeploy)
+
+Se aparecer *"No Output Directory named public found"*, o Framework Preset está em **Other**. O arquivo `frontend/vercel.json` força **Next.js**; confira também o passo 3 acima.
 
 O build local deve passar:
 
