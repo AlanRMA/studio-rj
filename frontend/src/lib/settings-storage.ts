@@ -2,6 +2,7 @@ import {
   DEFAULT_DESCRICAO_ITEMS,
   DEFAULT_EMPRESA_ITEMS,
   DEFAULT_SAVE_FORMAT,
+  DEFAULT_VALOR_UNIT_ITEMS,
   NOVO_PLUS_VALUE,
   STORAGE_KEYS,
 } from '@/lib/constants';
@@ -12,6 +13,7 @@ export interface SettingsSnapshot {
   saveFormat: SaveFormat;
   descricaoItems: string[];
   empresaItems: string[];
+  valorUnitItems: string[];
 }
 
 function readJson<T>(key: string, fallback: T): T {
@@ -43,6 +45,10 @@ export function loadSettingsSnapshot(): SettingsSnapshot {
       ensureNovoPlusLast(DEFAULT_DESCRICAO_ITEMS)
     ),
     empresaItems: readJson(STORAGE_KEYS.empresaList, ensureNovoPlusLast(DEFAULT_EMPRESA_ITEMS)),
+    valorUnitItems: readJson(
+      STORAGE_KEYS.valorUnitList,
+      ensureNovoPlusLast(DEFAULT_VALOR_UNIT_ITEMS)
+    ),
   };
 }
 
@@ -51,4 +57,5 @@ export function saveSettingsSnapshot(snapshot: SettingsSnapshot): void {
   writeJson(STORAGE_KEYS.saveFormat, snapshot.saveFormat);
   writeJson(STORAGE_KEYS.descricaoList, ensureNovoPlusLast(snapshot.descricaoItems));
   writeJson(STORAGE_KEYS.empresaList, ensureNovoPlusLast(snapshot.empresaItems));
+  writeJson(STORAGE_KEYS.valorUnitList, ensureNovoPlusLast(snapshot.valorUnitItems));
 }

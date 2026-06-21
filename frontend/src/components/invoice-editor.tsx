@@ -10,6 +10,7 @@ import { invoiceSchema } from '@/lib/types';
 import { formatInvoiceValidationError, validateInvoiceForSave } from '@/lib/invoice-validation';
 import { useDropdownLists } from '@/hooks/use-dropdown-lists';
 import { CustomItemSelect } from '@/components/custom-item-select';
+import { CustomPriceSelect } from '@/components/custom-price-select';
 import { ClearOnFocusInput } from '@/components/clear-on-focus-input';
 import { ItemRowErrors } from '@/components/item-row-errors';
 import { LogoUploader } from '@/components/logo-uploader';
@@ -37,7 +38,7 @@ interface InvoiceEditorProps {
 
 export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>(
   function InvoiceEditor({ invoice, logo, onLogoChange, onInvoiceChange, listsRevision = 0 }, ref) {
-  const { descricaoItems, empresaItems, addItem } = useDropdownLists(listsRevision);
+  const { descricaoItems, empresaItems, valorUnitItems, addItem } = useDropdownLists(listsRevision);
   const legacyClearValues = [...LEGACY_PLACEHOLDER_VALUES];
 
   const form = useForm<Invoice>({
@@ -114,27 +115,8 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
           <CardHeader>
             <CardTitle className="font-headline">Sua Empresa</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-4 items-start">
+          <CardContent>
             <LogoUploader logo={logo} onLogoChange={onLogoChange} />
-            <div className="flex-1 w-full">
-              <FormField
-                name="companyName"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <CustomItemSelect
-                      label="Nome da Empresa"
-                      value={field.value}
-                      items={empresaItems}
-                      onChange={field.onChange}
-                      onAddItem={(val) => addItem('empresa', val)}
-                      placeholder="Selecione a empresa"
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </CardContent>
         </Card>
 
@@ -143,6 +125,23 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
             <CardTitle className="font-headline">Detalhes da Nota</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <FormField
+              name="companyName"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <CustomItemSelect
+                    label="Nome da Empresa"
+                    value={field.value}
+                    items={empresaItems}
+                    onChange={field.onChange}
+                    onAddItem={(val) => addItem('empresa', val)}
+                    placeholder="Selecione a empresa"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               name="clientName"
               control={form.control}
@@ -293,16 +292,15 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                     control={form.control}
                     render={({ field: priceField }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel className={index !== 0 ? 'sr-only' : ''}>Valor Unit. (R$)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0"
-                            {...priceField}
-                            onChange={(e) => handleNumericInput(priceField, e.target.value)}
-                          />
-                        </FormControl>
+                        <CustomPriceSelect
+                          label="Valor Unit. (R$)"
+                          hideLabel={index !== 0}
+                          value={priceField.value || 0}
+                          items={valorUnitItems}
+                          onChange={priceField.onChange}
+                          onAddItem={(val) => addItem('valorUnit', val)}
+                          placeholder="Selecione o valor"
+                        />
                       </FormItem>
                     )}
                   />

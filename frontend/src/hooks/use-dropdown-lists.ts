@@ -6,13 +6,14 @@ import { loadSettingsSnapshot } from '@/lib/settings-storage';
 import {
   DEFAULT_DESCRICAO_ITEMS,
   DEFAULT_EMPRESA_ITEMS,
+  DEFAULT_VALOR_UNIT_ITEMS,
   LEGACY_PLACEHOLDER_VALUES,
   MAX_CUSTOM_ITEM_LENGTH,
   NOVO_PLUS_VALUE,
   STORAGE_KEYS,
 } from '@/lib/constants';
 
-export type DropdownListType = 'descricao' | 'empresa';
+export type DropdownListType = 'descricao' | 'empresa' | 'valorUnit';
 
 function ensureNovoPlusLast(items: string[]): string[] {
   const filtered = items.filter((item) => item !== NOVO_PLUS_VALUE);
@@ -71,6 +72,10 @@ const LIST_CONFIG = {
     storageKey: STORAGE_KEYS.empresaList,
     defaults: DEFAULT_EMPRESA_ITEMS,
   },
+  valorUnit: {
+    storageKey: STORAGE_KEYS.valorUnitList,
+    defaults: DEFAULT_VALOR_UNIT_ITEMS,
+  },
 } as const;
 
 export function useDropdownLists(reloadToken = 0) {
@@ -82,6 +87,10 @@ export function useDropdownLists(reloadToken = 0) {
     STORAGE_KEYS.empresaList,
     getInitialEmpresaItems()
   );
+  const [valorUnitItems, setValorUnitItems] = useLocalStorage<string[]>(
+    STORAGE_KEYS.valorUnitList,
+    ensureNovoPlusLast(DEFAULT_VALOR_UNIT_ITEMS)
+  );
   const [, setReloadCounter] = useState(0);
 
   useEffect(() => {
@@ -89,8 +98,9 @@ export function useDropdownLists(reloadToken = 0) {
     const snapshot = loadSettingsSnapshot();
     setDescricaoItems(snapshot.descricaoItems);
     setEmpresaItems(snapshot.empresaItems);
+    setValorUnitItems(snapshot.valorUnitItems);
     setReloadCounter((value) => value + 1);
-  }, [reloadToken, setDescricaoItems, setEmpresaItems]);
+  }, [reloadToken, setDescricaoItems, setEmpresaItems, setValorUnitItems]);
 
   const getListState = useCallback(
     (list: DropdownListType) => {
@@ -107,9 +117,15 @@ export function useDropdownLists(reloadToken = 0) {
             setter: setEmpresaItems,
             defaults: LIST_CONFIG.empresa.defaults,
           };
+        case 'valorUnit':
+          return {
+            items: valorUnitItems,
+            setter: setValorUnitItems,
+            defaults: LIST_CONFIG.valorUnit.defaults,
+          };
       }
     },
-    [descricaoItems, empresaItems, setDescricaoItems, setEmpresaItems]
+    [descricaoItems, empresaItems, setDescricaoItems, setEmpresaItems, setValorUnitItems, valorUnitItems]
   );
 
   const addItem = useCallback(
@@ -162,12 +178,15 @@ export function useDropdownLists(reloadToken = 0) {
 
   const selectableDescricaoItems = descricaoItems.filter((item) => item !== NOVO_PLUS_VALUE);
   const selectableEmpresaItems = empresaItems.filter((item) => item !== NOVO_PLUS_VALUE);
+  const selectableValorUnitItems = valorUnitItems.filter((item) => item !== NOVO_PLUS_VALUE);
 
   return {
     descricaoItems: normalizeItems(descricaoItems, DEFAULT_DESCRICAO_ITEMS),
     empresaItems: normalizeItems(empresaItems, DEFAULT_EMPRESA_ITEMS),
+    valorUnitItems: normalizeItems(valorUnitItems, DEFAULT_VALOR_UNIT_ITEMS),
     selectableDescricaoItems,
     selectableEmpresaItems,
+    selectableValorUnitItems,
     addItem,
     deleteItem,
     reorderItems,

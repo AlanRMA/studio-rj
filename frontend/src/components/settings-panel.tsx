@@ -56,7 +56,7 @@ export function SettingsPanel({
   const hasChanges = JSON.stringify(draft) !== JSON.stringify(savedDraft);
 
   const updateList = (
-    key: 'descricaoItems' | 'empresaItems',
+    key: 'descricaoItems' | 'empresaItems' | 'valorUnitItems',
     updater: (items: string[]) => string[]
   ) => {
     setDraft((current) => ({
@@ -161,6 +161,36 @@ export function SettingsPanel({
               })
             }
             emptyMessage="Nenhuma empresa cadastrada. Use NOVO+ no editor para adicionar."
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-headline">Lista de Valores Unitários</CardTitle>
+          <CardDescription>
+            Gerencie os valores do dropdown Valor Unit. (R$). Arraste para reordenar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SortableItemList
+            items={withoutNovo(draft.valorUnitItems)}
+            onDelete={(item) =>
+              updateList('valorUnitItems', (items) => items.filter((entry) => entry !== item))
+            }
+            onReorder={(from, to) =>
+              updateList('valorUnitItems', (items) => {
+                const reordered = [...items];
+                const [moved] = reordered.splice(from, 1);
+                reordered.splice(to, 0, moved);
+                return reordered;
+              })
+            }
+            emptyMessage="Nenhum valor cadastrado. Use NOVO+ no editor para adicionar."
+            formatItem={(item) => {
+              const parsed = parseFloat(item);
+              return isNaN(parsed) ? item : `R$ ${parsed.toFixed(2).replace('.', ',')}`;
+            }}
           />
         </CardContent>
       </Card>

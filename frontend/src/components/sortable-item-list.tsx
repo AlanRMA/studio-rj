@@ -10,6 +10,7 @@ interface SortableItemListProps {
   onDelete: (item: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   emptyMessage?: string;
+  formatItem?: (item: string) => string;
 }
 
 export function SortableItemList({
@@ -17,6 +18,7 @@ export function SortableItemList({
   onDelete,
   onReorder,
   emptyMessage = 'Nenhum item cadastrado.',
+  formatItem,
 }: SortableItemListProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -55,7 +57,7 @@ export function SortableItemList({
           )}
         >
           <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab shrink-0" />
-          <span className="flex-1 text-sm truncate">{item}</span>
+          <span className="flex-1 text-sm truncate">{formatItem ? formatItem(item) : item}</span>
           <Button
             type="button"
             variant="ghost"

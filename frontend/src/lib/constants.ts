@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   companyName: 'jm-notas-company-name',
   empresaList: 'jm-notas-empresa-list',
   descricaoList: 'jm-notas-descricao-list',
+  valorUnitList: 'jm-notas-valor-unit-list',
   saveFormat: 'jm-notas-save-format',
   savedExports: 'jm-notas-saved-exports',
 } as const;
@@ -30,6 +31,8 @@ export const DEFAULT_DESCRICAO_ITEMS = [
 ];
 
 export const DEFAULT_EMPRESA_ITEMS: string[] = [];
+
+export const DEFAULT_VALOR_UNIT_ITEMS = ['50', '75', '100'];
 
 export const EMITTER_DATA = {
   name: 'James Mendes da Silva',
