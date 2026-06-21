@@ -85,4 +85,41 @@ pwd
 | `.env.local` errado (porta 4000 / chave Rosania) | Use `4001` + `JamesChaveApi` |
 | Não reiniciou o frontend após mudar `.env` | Pare e rode `npm run dev` de novo |
 | Procurando em `prod.james_receipts` | Teste local grava só em **`dev.james_receipts`** |
-| Deploy Vercel | Configure `RECEIPT_API_URL` e `RECEIPT_API_KEY` no painel |
+| Deploy Vercel | Veja seção **Deploy (Vercel)** abaixo |
+
+---
+
+## Deploy (Vercel) — frontend
+
+O Next.js está em `frontend/`, **não** na raiz do repositório. Se o build falhar com *"No Next.js version detected"*, o Root Directory está errado.
+
+1. [Vercel Dashboard](https://vercel.com/dashboard) → seu projeto → **Settings** → **Build and Deployment**
+2. **Root Directory** → **Edit** → digite `frontend` → **Save**
+3. **Environment Variables** (Production e Preview):
+
+| Variável | Valor |
+|----------|-------|
+| `RECEIPT_API_URL` | URL do backend James no Render (sem barra no final) |
+| `RECEIPT_API_KEY` | Mesma `INGEST_API_KEY` do backend |
+
+4. **Redeploy** (Deployments → ⋯ → Redeploy)
+
+O build local deve passar:
+
+```bash
+cd /Users/macbook/Documents/Code/studio-rj/frontend
+npm run build
+```
+
+Depois do deploy, copie a URL do Vercel (ex: `https://seu-app.vercel.app`) e coloque em `ALLOWED_ORIGINS` no Render.
+
+---
+
+## Deploy (Render) — backend
+
+1. Novo Web Service → repositório `studio-rj`
+2. **Root Directory:** `backend`
+3. **Build Command:** `npm install --include=dev && npm run build`
+4. **Start Command:** `npm start`
+5. Variáveis: `APP_ENV=production`, `DATABASE_URL`, `INGEST_API_KEY`, `ALLOWED_ORIGINS` (URL do Vercel)
+6. Após o deploy, no Shell do Render: `npm run migrate:prod`
