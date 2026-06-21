@@ -36,19 +36,31 @@ function ensureNovoPlusLast(items: string[]): string[] {
   return [...filtered, NOVO_PLUS_VALUE];
 }
 
+const LEGACY_DEFAULT_DESCRICAO = ['Instalação', 'Manutenção', 'Reparo', 'Serviço'];
+const LEGACY_DEFAULT_VALOR_UNIT = ['50', '75', '100'];
+
+/** Remove listas que ainda são só os defaults antigos do código. */
+export function stripLegacyDefaults(items: string[], legacyDefaults: string[]): string[] {
+  const withoutNovo = items.filter((item) => item !== NOVO_PLUS_VALUE);
+  if (
+    withoutNovo.length === legacyDefaults.length &&
+    withoutNovo.every((item) => legacyDefaults.includes(item))
+  ) {
+    return ensureNovoPlusLast([]);
+  }
+  return ensureNovoPlusLast(withoutNovo);
+}
+
 export function loadSettingsSnapshot(): SettingsSnapshot {
+  const descricaoRaw = readJson(STORAGE_KEYS.descricaoList, ensureNovoPlusLast([]));
+  const valorUnitRaw = readJson(STORAGE_KEYS.valorUnitList, ensureNovoPlusLast([]));
+
   return {
     logo: readJson<string | null>(STORAGE_KEYS.logo, null),
     saveFormat: readJson<SaveFormat>(STORAGE_KEYS.saveFormat, DEFAULT_SAVE_FORMAT),
-    descricaoItems: readJson(
-      STORAGE_KEYS.descricaoList,
-      ensureNovoPlusLast(DEFAULT_DESCRICAO_ITEMS)
-    ),
+    descricaoItems: stripLegacyDefaults(descricaoRaw, LEGACY_DEFAULT_DESCRICAO),
     empresaItems: readJson(STORAGE_KEYS.empresaList, ensureNovoPlusLast(DEFAULT_EMPRESA_ITEMS)),
-    valorUnitItems: readJson(
-      STORAGE_KEYS.valorUnitList,
-      ensureNovoPlusLast(DEFAULT_VALOR_UNIT_ITEMS)
-    ),
+    valorUnitItems: stripLegacyDefaults(valorUnitRaw, LEGACY_DEFAULT_VALOR_UNIT),
   };
 }
 

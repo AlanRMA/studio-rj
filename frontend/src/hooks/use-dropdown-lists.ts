@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { loadSettingsSnapshot } from '@/lib/settings-storage';
+import { loadSettingsSnapshot, stripLegacyDefaults } from '@/lib/settings-storage';
 import {
   DEFAULT_DESCRICAO_ITEMS,
   DEFAULT_EMPRESA_ITEMS,
@@ -14,6 +14,9 @@ import {
 } from '@/lib/constants';
 
 export type DropdownListType = 'descricao' | 'empresa' | 'valorUnit';
+
+const LEGACY_DEFAULT_DESCRICAO = ['Instalação', 'Manutenção', 'Reparo', 'Serviço'];
+const LEGACY_DEFAULT_VALOR_UNIT = ['50', '75', '100'];
 
 function ensureNovoPlusLast(items: string[]): string[] {
   const filtered = items.filter((item) => item !== NOVO_PLUS_VALUE);
@@ -81,7 +84,7 @@ const LIST_CONFIG = {
 export function useDropdownLists(reloadToken = 0) {
   const [descricaoItems, setDescricaoItems] = useLocalStorage<string[]>(
     STORAGE_KEYS.descricaoList,
-    ensureNovoPlusLast(DEFAULT_DESCRICAO_ITEMS)
+    ensureNovoPlusLast([])
   );
   const [empresaItems, setEmpresaItems] = useLocalStorage<string[]>(
     STORAGE_KEYS.empresaList,
@@ -89,9 +92,15 @@ export function useDropdownLists(reloadToken = 0) {
   );
   const [valorUnitItems, setValorUnitItems] = useLocalStorage<string[]>(
     STORAGE_KEYS.valorUnitList,
-    ensureNovoPlusLast(DEFAULT_VALOR_UNIT_ITEMS)
+    ensureNovoPlusLast([])
   );
   const [, setReloadCounter] = useState(0);
+
+  useEffect(() => {
+    setDescricaoItems((current) => stripLegacyDefaults(current, LEGACY_DEFAULT_DESCRICAO));
+    setValorUnitItems((current) => stripLegacyDefaults(current, LEGACY_DEFAULT_VALOR_UNIT));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (reloadToken === 0) return;

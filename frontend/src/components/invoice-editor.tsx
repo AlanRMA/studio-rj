@@ -12,6 +12,7 @@ import { useDropdownLists } from '@/hooks/use-dropdown-lists';
 import { CustomItemSelect } from '@/components/custom-item-select';
 import { CustomPriceSelect } from '@/components/custom-price-select';
 import { ClearOnFocusInput } from '@/components/clear-on-focus-input';
+import { ClearOnFocusFloatInput } from '@/components/clear-on-focus-float-input';
 import { ItemRowErrors } from '@/components/item-row-errors';
 import { LogoUploader } from '@/components/logo-uploader';
 import { LEGACY_PLACEHOLDER_VALUES } from '@/lib/constants';
@@ -276,12 +277,10 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                       <FormItem className="space-y-1.5">
                         <FormLabel className={index !== 0 ? 'sr-only' : ''}>Quantidade/Complemento</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="1"
-                            {...qtyField}
-                            onChange={(e) => handleNumericInput(qtyField, e.target.value)}
+                          <ClearOnFocusFloatInput
+                            value={qtyField.value ?? 0}
+                            onChange={qtyField.onChange}
+                            placeholder="0"
                           />
                         </FormControl>
                       </FormItem>
@@ -348,7 +347,7 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                   ref: '',
                   description: '',
                   isRisk: false,
-                  quantity: 1,
+                  quantity: 0,
                   unitPrice: 0,
                   total: 0,
                 })

@@ -23,16 +23,11 @@ import type { SaveFormat } from '@/lib/types';
 
 export const DEFAULT_SAVE_FORMAT: SaveFormat = 'jpeg';
 
-export const DEFAULT_DESCRICAO_ITEMS = [
-  'Instalação',
-  'Manutenção',
-  'Reparo',
-  'Serviço',
-];
+export const DEFAULT_DESCRICAO_ITEMS: string[] = [];
 
 export const DEFAULT_EMPRESA_ITEMS: string[] = [];
 
-export const DEFAULT_VALOR_UNIT_ITEMS = ['50', '75', '100'];
+export const DEFAULT_VALOR_UNIT_ITEMS: string[] = [];
 
 export const EMITTER_DATA = {
   name: 'James Mendes da Silva',

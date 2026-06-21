@@ -57,7 +57,7 @@ const createDefaultInvoice = (): Invoice => ({
       id: `item-${Date.now()}`,
       ref: '',
       description: '',
-      quantity: 1,
+      quantity: 0,
       unitPrice: 0,
       total: 0,
       isRisk: false,
