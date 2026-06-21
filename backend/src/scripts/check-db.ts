@@ -9,7 +9,7 @@ const envPath = path.join(path.resolve(__dirname, '../..'), '.env');
 
 async function main() {
   console.log('\n=== Diagnóstico James Backend ===\n');
-  console.log(`Pasta atual esperada: james/backend`);
+  console.log(`Pasta atual esperada: studio-rj/backend`);
   console.log(`.env existe: ${fs.existsSync(envPath) ? 'sim' : 'NÃO'}`);
   console.log(`DATABASE_URL configurada: ${config.databaseUrl ? 'sim' : 'NÃO'}`);
   console.log(`APP_ENV: ${config.appEnv}`);

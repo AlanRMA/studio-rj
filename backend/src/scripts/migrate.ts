@@ -15,7 +15,7 @@ function loadTableSql(schema: SchemaName): string {
   if (!fs.existsSync(templatePath)) {
     throw new Error(
       `Arquivo de migration não encontrado: ${templatePath}\n` +
-        'Confirme que você está na pasta james/backend.'
+        'Confirme que você está na pasta backend/ (studio-rj/backend).'
     );
   }
   return fs.readFileSync(templatePath, 'utf8').replaceAll('{{SCHEMA}}', schema);
@@ -26,7 +26,7 @@ function assertEnvConfigured(): void {
     throw new Error(
       `Arquivo .env não encontrado em ${envPath}\n\n` +
         'Passos:\n' +
-        '  1. cd james/backend\n' +
+        '  1. cd backend\n' +
         '  2. cp .env.example .env\n' +
         '  3. Cole a mesma DATABASE_URL do backend da Rosania\n' +
         '  4. npm run migrate:all'
