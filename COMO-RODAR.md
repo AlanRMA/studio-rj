@@ -30,8 +30,20 @@ Deixe esse terminal aberto. Deve aparecer: `james-receipt-backend rodando em htt
 ```bash
 cd /Users/macbook/Documents/Code/studio-rj/frontend
 npm install
+cp .env.example .env.local
 npm run dev
 ```
+
+O `.env.local` **precisa** apontar para o backend James:
+
+```env
+RECEIPT_API_URL=http://localhost:4001
+RECEIPT_API_KEY=JamesChaveApi
+```
+
+(mesma `INGEST_API_KEY` do `backend/.env` — **não** use porta 4000)
+
+**Reinicie** o `npm run dev` depois de mudar o `.env.local`.
 
 Abra: **http://localhost:9003**
 
@@ -62,3 +74,15 @@ Para ver onde você está agora:
 ```bash
 pwd
 ```
+
+---
+
+## Salvou no navegador mas não no Supabase?
+
+| Causa | Solução |
+|-------|---------|
+| Backend não rodando | Terminal 1: `cd backend && npm run dev` |
+| `.env.local` errado (porta 4000 / chave Rosania) | Use `4001` + `JamesChaveApi` |
+| Não reiniciou o frontend após mudar `.env` | Pare e rode `npm run dev` de novo |
+| Procurando em `prod.james_receipts` | Teste local grava só em **`dev.james_receipts`** |
+| Deploy Vercel | Configure `RECEIPT_API_URL` e `RECEIPT_API_KEY` no painel |
