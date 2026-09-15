@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Invoice, SavedExport, SaveFormat } from '@/lib/types';
-import { submitReceiptToBackend } from '@/lib/receipt-ingest';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import { DEFAULT_SAVE_FORMAT, LEGACY_PLACEHOLDER_VALUES, STORAGE_KEYS } from '@/lib/constants';
@@ -103,7 +102,6 @@ const Page: FC = () => {
   const [saveSuccess, setSaveSuccess] = useState<{
     clientName: string;
     format: SaveFormat;
-    syncStatus: 'synced' | 'queued' | 'failed';
   } | null>(null);
 
   const isSaveLocked = isSaving || saveSuccess !== null;
@@ -237,23 +235,6 @@ const Page: FC = () => {
 
         setSavedExports((prev) => [saved, ...prev]);
 
-        const ingestResult = await submitReceiptToBackend(invoice, saved);
-        const syncStatus: 'synced' | 'queued' | 'failed' = !ingestResult.ok
-          ? 'failed'
-          : ingestResult.status === 'queued'
-            ? 'queued'
-            : 'synced';
-
-        if (!ingestResult.ok) {
-          toast({
-            variant: 'destructive',
-            title: 'Não salvou no Supabase',
-            description:
-              ingestResult.error ??
-              'Verifique se o backend James está rodando e se RECEIPT_API_URL/RECEIPT_API_KEY no .env.local estão corretos.',
-          });
-        }
-
         const filename = getExportFilename(receiptLabel, options.downloadFormat);
         if (options.downloadFormat === format) {
           downloadDataUrl(data, filename);
@@ -266,14 +247,15 @@ const Page: FC = () => {
         setSaveSuccess({
           clientName: receiptLabel,
           format,
-          syncStatus,
         });
       } catch (error) {
         console.error(error);
         toast({
           variant: 'destructive',
           title: 'Falha ao salvar',
-          description: 'Não foi possível gerar e salvar o arquivo.',
+          description: error instanceof DOMException && error.name === 'QuotaExceededError'
+            ? 'O armazenamento do navegador está cheio. Baixe e remova notas antigas para liberar espaço.'
+            : 'Não foi possível gerar e salvar o arquivo.',
         });
       } finally {
         setIsSaving(false);
@@ -463,11 +445,7 @@ const Page: FC = () => {
                 <AlertDialogDescription className="mt-1 text-base">
                   O recibo de <strong>{saveSuccess?.clientName}</strong> foi salvo como{' '}
                   <strong>{saveSuccess?.format.toUpperCase()}</strong> em Minhas Notas.
-                  {saveSuccess?.syncStatus === 'synced'
-                    ? ' Os dados também foram enviados ao sistema.'
-                    : saveSuccess?.syncStatus === 'queued'
-                      ? ' Os dados serão sincronizados com o sistema em breve.'
-                      : ' O arquivo foi salvo, mas o envio ao servidor falhou. Tente salvar novamente mais tarde.'}
+                  {' Os dados ficam apenas neste navegador.'}
                 </AlertDialogDescription>
               </div>
             </div>
