@@ -83,7 +83,7 @@ function migrateInvoice(invoice: Invoice): Invoice {
     items: invoice.items.map((item) => ({
       ...item,
       isRisk: true,
-      total: calculateMeterTotal(item.quantity, item.unitPrice),
+      total: item.total ?? calculateMeterTotal(item.quantity, item.unitPrice),
     })),
   };
 }

@@ -168,7 +168,7 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                 key={field.id}
                 className="p-3 border rounded-md space-y-3"
               >
-                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,3fr)] gap-3">
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,5fr)] gap-3">
                   <FormField
                     name={`items.${index}.ref`}
                     control={form.control}
@@ -192,7 +192,7 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                       <FormItem className="space-y-1.5">
                         <FormLabel>Descrição</FormLabel>
                         <FormControl>
-                          <Textarea rows={4} className="min-h-28 resize-y" placeholder="Descreva o serviço ou item" {...descField} />
+                          <Textarea rows={1} className="h-10 min-h-10 resize-y" placeholder="Descreva o serviço ou item" {...descField} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -235,13 +235,10 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                       <FormItem className="space-y-1.5">
                         <FormLabel className={index !== 0 ? 'sr-only' : ''}>Valor Final (R$)</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0"
-                            {...totalField}
-                            readOnly
-                            className="bg-muted"
+                          <ClearOnFocusFloatInput
+                            value={totalField.value ?? 0}
+                            onChange={totalField.onChange}
+                            placeholder="0,00"
                           />
                         </FormControl>
                       </FormItem>
@@ -249,7 +246,7 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                   />
                 </div>
 
-                <p className="text-xs text-muted-foreground">Total = valor do metro × centímetros ÷ 100.</p>
+                <p className="text-xs text-muted-foreground">Total = valor do metro × centímetros ÷ 100. Você pode ajustar o valor final; alterar o comprimento ou o preço do metro refaz o cálculo.</p>
                 <div className="flex justify-end">
                   <Button
                     type="button"
