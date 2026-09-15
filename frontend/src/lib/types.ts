@@ -35,7 +35,7 @@ export const invoiceSchema = z
     if (!data.clientName && !data.companyName) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Informe Nome da Empresa ou Nome do Cliente.',
+        message: 'Informe Empresa/Cliente.',
         path: ['clientName'],
       });
     }

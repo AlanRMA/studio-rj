@@ -3,10 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Download, Save, Trash2 } from 'lucide-react';
 import type { Invoice, SavedExport, SaveFormat } from '@/lib/types';
-import { NOVO_PLUS_VALUE } from '@/lib/constants';
 import { loadSettingsSnapshot, saveSettingsSnapshot, type SettingsSnapshot } from '@/lib/settings-storage';
 import { LogoUploader } from '@/components/logo-uploader';
-import { SortableItemList } from '@/components/sortable-item-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -32,10 +30,6 @@ interface SettingsPanelProps {
   onSettingsSaved: (snapshot: SettingsSnapshot) => void;
 }
 
-function withoutNovo(items: string[]): string[] {
-  return items.filter((item) => item !== NOVO_PLUS_VALUE);
-}
-
 export function SettingsPanel({
   invoices,
   savedExports,
@@ -54,16 +48,6 @@ export function SettingsPanel({
   }, []);
 
   const hasChanges = JSON.stringify(draft) !== JSON.stringify(savedDraft);
-
-  const updateList = (
-    key: 'descricaoItems' | 'empresaItems' | 'valorUnitItems',
-    updater: (items: string[]) => string[]
-  ) => {
-    setDraft((current) => ({
-      ...current,
-      [key]: updater(withoutNovo(current[key])),
-    }));
-  };
 
   const handleSaveSettings = () => {
     saveSettingsSnapshot(draft);
@@ -136,87 +120,6 @@ export function SettingsPanel({
               <Label htmlFor="save-pdf">PDF (documento)</Label>
             </div>
           </RadioGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Lista de Empresas</CardTitle>
-          <CardDescription>
-            Gerencie as empresas do dropdown Nome da Empresa. Arraste para reordenar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SortableItemList
-            items={withoutNovo(draft.empresaItems)}
-            onDelete={(item) =>
-              updateList('empresaItems', (items) => items.filter((entry) => entry !== item))
-            }
-            onReorder={(from, to) =>
-              updateList('empresaItems', (items) => {
-                const reordered = [...items];
-                const [moved] = reordered.splice(from, 1);
-                reordered.splice(to, 0, moved);
-                return reordered;
-              })
-            }
-            emptyMessage="Nenhuma empresa cadastrada. Use NOVO+ no editor para adicionar."
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Lista de Valores Unitários</CardTitle>
-          <CardDescription>
-            Gerencie os valores do dropdown Valor Unit. (R$). Arraste para reordenar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SortableItemList
-            items={withoutNovo(draft.valorUnitItems)}
-            onDelete={(item) =>
-              updateList('valorUnitItems', (items) => items.filter((entry) => entry !== item))
-            }
-            onReorder={(from, to) =>
-              updateList('valorUnitItems', (items) => {
-                const reordered = [...items];
-                const [moved] = reordered.splice(from, 1);
-                reordered.splice(to, 0, moved);
-                return reordered;
-              })
-            }
-            emptyMessage="Nenhum valor cadastrado. Use NOVO+ no editor para adicionar."
-            formatItem={(item) => {
-              const parsed = parseFloat(item);
-              return isNaN(parsed) ? item : `R$ ${parsed.toFixed(2).replace('.', ',')}`;
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Lista de Descrições</CardTitle>
-          <CardDescription>
-            Gerencie os itens do dropdown Descrição. Arraste para reordenar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SortableItemList
-            items={withoutNovo(draft.descricaoItems)}
-            onDelete={(item) =>
-              updateList('descricaoItems', (items) => items.filter((entry) => entry !== item))
-            }
-            onReorder={(from, to) =>
-              updateList('descricaoItems', (items) => {
-                const reordered = [...items];
-                const [moved] = reordered.splice(from, 1);
-                reordered.splice(to, 0, moved);
-                return reordered;
-              })
-            }
-          />
         </CardContent>
       </Card>
 

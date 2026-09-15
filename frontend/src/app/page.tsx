@@ -18,6 +18,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import { DEFAULT_SAVE_FORMAT, LEGACY_PLACEHOLDER_VALUES, STORAGE_KEYS } from '@/lib/constants';
 import { generateId } from '@/lib/utils';
+import { calculateMeterTotal } from '@/lib/meter-total';
 import {
   captureInvoiceImage,
   downloadDataUrl,
@@ -59,7 +60,7 @@ const createDefaultInvoice = (): Invoice => ({
       quantity: 0,
       unitPrice: 0,
       total: 0,
-      isRisk: false,
+      isRisk: true,
     },
   ],
   companyName: '',
@@ -76,11 +77,13 @@ function clearLegacyPlaceholder(value: string): string {
 function migrateInvoice(invoice: Invoice): Invoice {
   return {
     ...invoice,
-    companyName: clearLegacyPlaceholder(invoice.companyName ?? ''),
+    clientName: [clearLegacyPlaceholder(invoice.companyName ?? ''), clearLegacyPlaceholder(invoice.clientName ?? '')].filter((value, index, values) => value && values.indexOf(value) === index).join(' / '),
+    companyName: '',
     service: clearLegacyPlaceholder(invoice.service ?? ''),
     items: invoice.items.map((item) => ({
       ...item,
-      isRisk: item.isRisk ?? false,
+      isRisk: true,
+      total: calculateMeterTotal(item.quantity, item.unitPrice),
     })),
   };
 }
@@ -93,7 +96,6 @@ const Page: FC = () => {
     STORAGE_KEYS.saveFormat,
     DEFAULT_SAVE_FORMAT
   );
-  const [settingsRevision, setSettingsRevision] = useState(0);
   const [savedExports, setSavedExports] = useLocalStorage<SavedExport[]>(
     STORAGE_KEYS.savedExports,
     []
@@ -268,7 +270,6 @@ const Page: FC = () => {
     (snapshot: { logo: string | null; saveFormat: SaveFormat }) => {
       setLogo(snapshot.logo);
       setSaveFormat(snapshot.saveFormat);
-      setSettingsRevision((value) => value + 1);
     },
     [setLogo, setSaveFormat]
   );
@@ -350,7 +351,6 @@ const Page: FC = () => {
                   logo={logo}
                   onLogoChange={setLogo}
                   onInvoiceChange={handleInvoiceChange}
-                  listsRevision={settingsRevision}
                 />
               </div>
               <div id="invoice-preview-container" className="w-full min-w-0 flex flex-col items-center">

@@ -10,10 +10,12 @@ interface ClearOnFocusFloatInputProps {
   className?: string;
   id?: string;
   disabled?: boolean;
+  allowNegative?: boolean;
 }
 
 /** Mantém só dígitos e um separador decimal (vírgula ou ponto). */
-function sanitizeFloatString(raw: string): string {
+function sanitizeFloatString(raw: string, allowNegative: boolean): string {
+  const sign = allowNegative && raw.trimStart().startsWith('-') ? '-' : '';
   let cleaned = raw.replace(/[^\d.,]/g, '');
   const separatorIndex = cleaned.search(/[.,]/);
   if (separatorIndex >= 0) {
@@ -21,7 +23,8 @@ function sanitizeFloatString(raw: string): string {
     const after = cleaned.slice(separatorIndex + 1).replace(/[.,]/g, '');
     cleaned = before + after;
   }
-  return cleaned;
+  cleaned = cleaned.replace(/^0+(?=\d)/, '');
+  return sign + cleaned;
 }
 
 function parseFloatValue(raw: string): number {
@@ -39,7 +42,7 @@ function formatDisplayValue(value: number): string {
 
 export const ClearOnFocusFloatInput = forwardRef<HTMLInputElement, ClearOnFocusFloatInputProps>(
   function ClearOnFocusFloatInput(
-    { value, onChange, placeholder = '0', className, id, disabled },
+    { value, onChange, placeholder = '0', className, id, disabled, allowNegative = false },
     ref
   ) {
     const [display, setDisplay] = useState(() => formatDisplayValue(value));
@@ -66,7 +69,7 @@ export const ClearOnFocusFloatInput = forwardRef<HTMLInputElement, ClearOnFocusF
           setDisplay('');
         }}
         onChange={(e) => {
-          const sanitized = sanitizeFloatString(e.target.value);
+          const sanitized = sanitizeFloatString(e.target.value, allowNegative);
           setDisplay(sanitized);
           onChange(parseFloatValue(sanitized));
         }}

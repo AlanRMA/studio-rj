@@ -30,10 +30,10 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
 
   const formatQuantity = (item: Invoice['items'][number]) => {
     const qty = item.quantity ?? 0;
-    return item.isRisk ? `${qty}cm` : String(qty);
+    return `${qty} cm`;
   };
 
-  const displayName = invoice.companyName || invoice.clientName || 'Cliente';
+  const displayName = invoice.clientName || invoice.companyName || 'Cliente';
 
   return (
     <Card
@@ -81,9 +81,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
           <div className="min-w-0">
             <p className="text-xs text-gray-500 mb-1">COBRANÇA PARA</p>
             <p className="font-bold text-2xl break-words">{displayName}</p>
-            {invoice.companyName && invoice.clientName ? (
-              <p className="text-sm text-gray-600 mt-1 break-words">{invoice.clientName}</p>
-            ) : null}
+
           </div>
           <div className="text-right min-w-0">
             <p className="text-xs text-gray-500 mb-1">TIPO DE SERVIÇO</p>
@@ -95,10 +93,10 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
           <table className="w-full table-fixed border-collapse text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="w-[12%] py-2 px-1 text-left text-xs font-medium">REF.</th>
-                <th className="w-[28%] py-2 px-1 text-left text-xs font-medium">DESCRIÇÃO</th>
-                <th className="w-[18%] py-2 px-1 text-center text-xs font-medium">QNTD./COMP.</th>
-                <th className="w-[20%] py-2 px-1 text-right text-xs font-medium">VALOR UNIT.</th>
+                <th className="w-[6%] py-2 px-1 text-left text-xs font-medium">REF.</th>
+                <th className="w-[34%] py-2 px-1 text-left text-xs font-medium">DESCRIÇÃO</th>
+                <th className="w-[18%] py-2 px-1 text-center text-xs font-medium">COMP. (cm)</th>
+                <th className="w-[20%] py-2 px-1 text-right text-xs font-medium">VALOR/METRO</th>
                 <th className="w-[22%] py-2 px-1 text-right text-xs font-medium">VALOR TOTAL</th>
               </tr>
             </thead>
@@ -107,7 +105,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
                 invoice.items.map((item) => (
                   <tr key={item.id} className="border-b border-gray-200">
                     <td className="py-2 px-1 text-xs align-top break-words">{item.ref || '-'}</td>
-                    <td className="py-2 px-1 text-xs align-top break-words leading-tight">
+                    <td className="py-2 px-1 text-xs align-top break-words whitespace-pre-wrap leading-tight">
                       {item.description}
                     </td>
                     <td className="py-2 px-1 text-xs text-center align-top whitespace-nowrap">

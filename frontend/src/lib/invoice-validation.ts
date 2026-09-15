@@ -12,7 +12,7 @@ export function formatInvoiceValidationError(error: ZodError): string {
         const labels: Record<string, string> = {
           description: 'Descrição',
           quantity: 'Quantidade',
-          unitPrice: 'Valor unitário',
+          unitPrice: 'Valor do metro',
           total: 'Valor final',
         };
         return `Linha ${line} — ${labels[field] ?? field}: ${issue.message}`;
