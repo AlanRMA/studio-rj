@@ -93,8 +93,8 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
           <table className="w-full table-fixed border-collapse text-sm">
             <thead>
               <tr className="bg-gray-100">
-                <th className="w-[6%] py-2 px-1 text-left text-xs font-medium">REF.</th>
-                <th className="w-[34%] py-2 px-1 text-left text-xs font-medium">DESCRIÇÃO</th>
+                <th className="w-[16%] py-2 px-1 text-left text-xs font-medium">REF.</th>
+                <th className="w-[24%] py-2 px-1 text-left text-xs font-medium">DESCRIÇÃO</th>
                 <th className="w-[18%] py-2 px-1 text-center text-xs font-medium">COMP. (cm)</th>
                 <th className="w-[20%] py-2 px-1 text-right text-xs font-medium">VALOR/METRO</th>
                 <th className="w-[22%] py-2 px-1 text-right text-xs font-medium">VALOR TOTAL</th>
@@ -104,7 +104,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
               {invoice.items.length > 0 ? (
                 invoice.items.map((item) => (
                   <tr key={item.id} className="border-b border-gray-200">
-                    <td className="py-2 px-1 text-xs align-top break-words">{item.ref || '-'}</td>
+                    <td className="py-2 px-1 text-xs align-top break-words tabular-nums">{item.ref || '-'}</td>
                     <td className="py-2 px-1 text-xs align-top break-words whitespace-pre-wrap leading-tight">
                       {item.description}
                     </td>
