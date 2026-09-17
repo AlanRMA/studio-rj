@@ -159,8 +159,9 @@ const Page: FC = () => {
     const container = previewScreenRef.current;
     const updatePreviewScale = () => {
       const availableWidth = container.clientWidth;
-      const scale = availableWidth >= INVOICE_PREVIEW_WIDTH
-        ? availableWidth / INVOICE_PREVIEW_WIDTH
+      const isDesktopLayout = window.matchMedia('(min-width: 1280px)').matches;
+      const scale = isDesktopLayout
+        ? Math.max(0.5, (availableWidth - 8) / INVOICE_PREVIEW_WIDTH)
         : 1;
 
       container.style.setProperty('--invoice-preview-scale', scale.toFixed(4));
