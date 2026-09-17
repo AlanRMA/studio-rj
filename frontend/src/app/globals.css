@@ -71,6 +71,18 @@
   }
 }
 
+@media screen and (min-width: 1800px) {
+  .invoice-preview-screen .invoice-preview {
+    zoom: 1.4;
+  }
+}
+
+@media screen and (min-width: 2000px) {
+  .invoice-preview-screen .invoice-preview {
+    zoom: 1.6;
+  }
+}
+
 .invoice-export-clone {
   width: 600px !important;
   min-width: 600px !important;
