@@ -16,7 +16,12 @@ import { format } from 'date-fns';
 import type { Invoice, SavedExport, SaveFormat } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
-import { DEFAULT_SAVE_FORMAT, LEGACY_PLACEHOLDER_VALUES, STORAGE_KEYS } from '@/lib/constants';
+import {
+  DEFAULT_SAVE_FORMAT,
+  INVOICE_PREVIEW_WIDTH,
+  LEGACY_PLACEHOLDER_VALUES,
+  STORAGE_KEYS,
+} from '@/lib/constants';
 import { generateId } from '@/lib/utils';
 import { calculateItemTotal } from '@/lib/meter-total';
 import {
@@ -145,7 +150,28 @@ const Page: FC = () => {
   }, [isClient]);
 
   const previewRef = useRef<HTMLDivElement>(null);
+  const previewScreenRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<InvoiceEditorHandle>(null);
+
+  useEffect(() => {
+    if (!isClient || !previewScreenRef.current) return;
+
+    const container = previewScreenRef.current;
+    const updatePreviewScale = () => {
+      const availableWidth = container.clientWidth;
+      const scale = availableWidth >= INVOICE_PREVIEW_WIDTH
+        ? availableWidth / INVOICE_PREVIEW_WIDTH
+        : 1;
+
+      container.style.setProperty('--invoice-preview-scale', scale.toFixed(4));
+    };
+
+    updatePreviewScale();
+    const resizeObserver = new ResizeObserver(updatePreviewScale);
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, [isClient]);
 
   const handleNewInvoice = () => {
     const newInvoice = createDefaultInvoice();
@@ -358,7 +384,10 @@ const Page: FC = () => {
                 />
               </div>
               <div id="invoice-preview-container" className="w-full min-w-0 flex flex-col items-center">
-                <div className="invoice-preview-screen w-full flex justify-center overflow-x-auto pb-2">
+                <div
+                  ref={previewScreenRef}
+                  className="invoice-preview-screen w-full flex justify-center overflow-x-auto pb-2"
+                >
                   <InvoicePreview ref={previewRef} invoice={currentInvoice} logo={logo} />
                 </div>
                 <div className="flex flex-wrap justify-center gap-2 mt-4 no-print w-full">
