@@ -205,7 +205,7 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                     control={form.control}
                     render={({ field: qtyField }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel className={index !== 0 ? 'sr-only' : ''}>Quantidade/Complemento (cm)</FormLabel>
+                        <FormLabel className={index !== 0 ? 'sr-only' : ''}>Qntd / Comp.</FormLabel>
                         <FormControl>
                           <ClearOnFocusFloatInput
                             value={qtyField.value ?? 0}
@@ -246,7 +246,7 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                   />
                 </div>
 
-                <p className="text-xs text-muted-foreground">Total = valor do metro × centímetros ÷ 100. Você pode ajustar o valor final; alterar o comprimento ou o preço do metro refaz o cálculo.</p>
+                <p className="text-xs text-muted-foreground">Total = valor do metro × Qntd / Comp. ÷ 100. Você pode ajustar o valor final; alterar a quantidade/complemento ou o preço do metro refaz o cálculo.</p>
                 <div className="flex justify-end">
                   <Button
                     type="button"
