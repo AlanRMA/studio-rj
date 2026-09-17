@@ -16,9 +16,10 @@ import { LEGACY_PLACEHOLDER_VALUES } from '@/lib/constants';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { calculateMeterTotal } from '@/lib/meter-total';
+import { calculateItemTotal } from '@/lib/meter-total';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface InvoiceEditorHandle {
   validateForSave: () => Promise<
@@ -46,6 +47,7 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
     control: form.control,
     name: 'items',
   });
+  const watchedItems = form.watch('items');
 
   useImperativeHandle(ref, () => ({
     validateForSave: async () => {
@@ -65,7 +67,11 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
         const itemIndex = parseInt(name.split('.')[1], 10);
         if (!isNaN(itemIndex)) {
           const item = form.getValues(`items.${itemIndex}`);
-          form.setValue(`items.${itemIndex}.total`, calculateMeterTotal(item.quantity, item.unitPrice), { shouldDirty: true, shouldValidate: true });
+          form.setValue(
+            `items.${itemIndex}.total`,
+            calculateItemTotal(item.quantity, item.unitPrice, item.isRisk),
+            { shouldDirty: true, shouldValidate: true }
+          );
         }
       }
 
@@ -199,13 +205,33 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                   />
                 </div>
 
+                <FormField
+                  control={form.control}
+                  name={`items.${index}.isRisk`}
+                  render={({ field: riskField }) => (
+                    <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={riskField.value}
+                          onCheckedChange={(checked) => riskField.onChange(checked === true)}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal cursor-pointer">
+                        É um risco? (medido em centímetros)
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <FormField
                     name={`items.${index}.quantity`}
                     control={form.control}
                     render={({ field: qtyField }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel className={index !== 0 ? 'sr-only' : ''}>Qntd / Comp.</FormLabel>
+                        <FormLabel>
+                          {watchedItems[index]?.isRisk ? 'Comprimento (cm)' : 'Quantidade'}
+                        </FormLabel>
                         <FormControl>
                           <ClearOnFocusFloatInput
                             value={qtyField.value ?? 0}
@@ -221,7 +247,9 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                     control={form.control}
                     render={({ field: priceField }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel>Valor do metro (R$)</FormLabel>
+                        <FormLabel>
+                          {watchedItems[index]?.isRisk ? 'Valor por metro (R$)' : 'Valor unitário (R$)'}
+                        </FormLabel>
                         <FormControl>
                           <ClearOnFocusFloatInput value={priceField.value ?? 0} onChange={priceField.onChange} placeholder="0,00" />
                         </FormControl>
@@ -246,7 +274,12 @@ export const InvoiceEditor = forwardRef<InvoiceEditorHandle, InvoiceEditorProps>
                   />
                 </div>
 
-                <p className="text-xs text-muted-foreground">Total = valor do metro × Qntd / Comp. ÷ 100. Você pode ajustar o valor final; alterar a quantidade/complemento ou o preço do metro refaz o cálculo.</p>
+                <p className="text-xs text-muted-foreground">
+                  {watchedItems[index]?.isRisk
+                    ? 'Total = comprimento em cm × valor por metro ÷ 100.'
+                    : 'Total = quantidade × valor unitário.'}{' '}
+                  Você pode ajustar o valor final; alterar os valores acima refaz o cálculo.
+                </p>
                 <div className="flex justify-end">
                   <Button
                     type="button"

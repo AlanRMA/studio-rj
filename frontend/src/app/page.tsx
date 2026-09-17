@@ -18,7 +18,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import { DEFAULT_SAVE_FORMAT, LEGACY_PLACEHOLDER_VALUES, STORAGE_KEYS } from '@/lib/constants';
 import { generateId } from '@/lib/utils';
-import { calculateMeterTotal } from '@/lib/meter-total';
+import { calculateItemTotal } from '@/lib/meter-total';
 import {
   captureInvoiceImage,
   downloadDataUrl,
@@ -80,11 +80,15 @@ function migrateInvoice(invoice: Invoice): Invoice {
     clientName: [clearLegacyPlaceholder(invoice.companyName ?? ''), clearLegacyPlaceholder(invoice.clientName ?? '')].filter((value, index, values) => value && values.indexOf(value) === index).join(' / '),
     companyName: '',
     service: clearLegacyPlaceholder(invoice.service ?? ''),
-    items: invoice.items.map((item) => ({
-      ...item,
-      isRisk: true,
-      total: item.total ?? calculateMeterTotal(item.quantity, item.unitPrice),
-    })),
+    items: invoice.items.map((item) => {
+      const isRisk = item.isRisk ?? true;
+
+      return {
+        ...item,
+        isRisk,
+        total: item.total ?? calculateItemTotal(item.quantity, item.unitPrice, isRisk),
+      };
+    }),
   };
 }
 

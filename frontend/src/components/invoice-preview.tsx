@@ -19,8 +19,10 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
   const adjustment = invoice.adjustment || 0;
   const total = subtotal + deliveryFee + adjustment;
 
-  const formatQuantity = (quantity: number) =>
-    new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(quantity || 0);
+  const formatQuantity = (item: Invoice['items'][number]) => {
+    const quantity = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(item.quantity || 0);
+    return item.isRisk ? `${quantity} cm` : quantity;
+  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -107,7 +109,7 @@ export const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
                       {item.description}
                     </td>
                     <td className="py-1 px-1 text-[10px] leading-tight text-center align-top whitespace-nowrap">
-                      {formatQuantity(item.quantity)}
+                      {formatQuantity(item)}
                     </td>
                     <td className="py-1 px-1 text-[10px] leading-tight text-right align-top whitespace-nowrap">
                       {formatCurrency(item.unitPrice || 0)}
