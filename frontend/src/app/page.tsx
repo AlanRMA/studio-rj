@@ -358,7 +358,7 @@ const Page: FC = () => {
                 />
               </div>
               <div id="invoice-preview-container" className="w-full min-w-0 flex flex-col items-center">
-                <div className="w-full flex justify-center overflow-x-auto pb-2">
+                <div className="invoice-preview-screen w-full flex justify-center overflow-x-auto pb-2">
                   <InvoicePreview ref={previewRef} invoice={currentInvoice} logo={logo} />
                 </div>
                 <div className="flex flex-wrap justify-center gap-2 mt-4 no-print w-full">
