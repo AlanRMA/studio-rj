@@ -259,6 +259,7 @@ const Page: FC = () => {
         const saved: SavedExport = {
           id: generateId(),
           invoiceId: invoice.id,
+          invoice: structuredClone(invoice),
           clientName: receiptLabel,
           invoiceNumber: invoice.invoiceNumber,
           format,
@@ -329,6 +330,35 @@ const Page: FC = () => {
     link.href = saved.data;
     link.download = getExportFilename(saved.clientName, saved.format);
     link.click();
+  };
+
+  const handleOpenSavedExport = (saved: SavedExport) => {
+    const source = saved.invoice ?? invoices.find((invoice) => invoice.id === saved.invoiceId);
+    if (!source) {
+      toast({
+        variant: 'destructive',
+        title: 'Dados da nota indisponíveis',
+        description: 'O arquivo antigo pode ser baixado, mas seu rascunho não está mais neste navegador.',
+      });
+      return;
+    }
+
+    const migrated = migrateInvoice(source);
+    const copy: Invoice = {
+      ...structuredClone(migrated),
+      id: generateId(),
+      invoiceNumber: generateId(),
+      issueDate: format(new Date(), 'yyyy-MM-dd'),
+      items: migrated.items.map((item) => ({ ...structuredClone(item), id: generateId() })),
+    };
+
+    setInvoices((previous) => [copy, ...previous]);
+    setCurrentInvoice(copy);
+    setActiveTab('editor');
+    toast({
+      title: 'Cópia aberta no editor',
+      description: 'Edite a nota e gere um novo JPEG ou PDF. A nota original foi preservada.',
+    });
   };
 
   const handleDeleteSavedExport = (id: string) => {
@@ -443,6 +473,7 @@ const Page: FC = () => {
                     <SavedExportCard
                       key={saved.id}
                       saved={saved}
+                      onOpen={handleOpenSavedExport}
                       onDownload={handleDownloadSavedExport}
                       onDelete={(id) => setExportToDelete(id)}
                     />

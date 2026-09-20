@@ -59,6 +59,7 @@ export type SaveFormat = 'jpeg' | 'pdf';
 export interface SavedExport {
   id: string;
   invoiceId: string;
+  invoice?: Invoice;
   clientName: string;
   invoiceNumber: string;
   format: SaveFormat;

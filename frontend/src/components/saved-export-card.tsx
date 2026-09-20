@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Download, FileText, X } from 'lucide-react';
+import { Download, FileText, Pencil, X } from 'lucide-react';
 import type { SavedExport } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,12 @@ import { Card, CardContent } from '@/components/ui/card';
 
 interface SavedExportCardProps {
   saved: SavedExport;
+  onOpen: (saved: SavedExport) => void;
   onDownload: (saved: SavedExport) => void;
   onDelete: (id: string) => void;
 }
 
-export function SavedExportCard({ saved, onDownload, onDelete }: SavedExportCardProps) {
+export function SavedExportCard({ saved, onOpen, onDownload, onDelete }: SavedExportCardProps) {
   const savedDate = format(new Date(saved.createdAt), "d 'de' MMM 'de' yyyy, HH:mm", {
     locale: ptBR,
   });
@@ -35,7 +36,7 @@ export function SavedExportCard({ saved, onDownload, onDelete }: SavedExportCard
 
       <CardContent
         className="p-3 sm:p-4 cursor-pointer"
-        onClick={() => onDownload(saved)}
+        onClick={() => onOpen(saved)}
       >
         <div className="flex flex-col sm:flex-row gap-4 items-start">
           <div className="w-full sm:w-48 shrink-0 bg-muted rounded-md overflow-hidden flex items-center justify-center min-h-[120px]">
@@ -61,18 +62,30 @@ export function SavedExportCard({ saved, onDownload, onDelete }: SavedExportCard
             </div>
             <p className="text-sm text-muted-foreground truncate">Ref: {saved.invoiceNumber}</p>
             <p className="text-xs text-muted-foreground">Salvo em {savedDate}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-1"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDownload(saved);
-              }}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Baixar {saved.format.toUpperCase()}
-            </Button>
+            <div className="flex flex-wrap gap-2 mt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen(saved);
+                }}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Editar como nova
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDownload(saved);
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Baixar {saved.format.toUpperCase()}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>
