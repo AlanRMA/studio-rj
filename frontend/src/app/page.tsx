@@ -20,6 +20,7 @@ import {
   DEFAULT_SAVE_FORMAT,
   INVOICE_PREVIEW_WIDTH,
   LEGACY_PLACEHOLDER_VALUES,
+  MAX_SAVED_NOTES,
   STORAGE_KEYS,
 } from '@/lib/constants';
 import { generateId } from '@/lib/utils';
@@ -127,6 +128,12 @@ const Page: FC = () => {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (isClient && savedExports.length > MAX_SAVED_NOTES) {
+      setSavedExports((previous) => previous.slice(0, MAX_SAVED_NOTES));
+    }
+  }, [isClient, savedExports.length, setSavedExports]);
 
   useEffect(() => {
     if (isClient) {
@@ -267,7 +274,7 @@ const Page: FC = () => {
           createdAt: new Date().toISOString(),
         };
 
-        setSavedExports((prev) => [saved, ...prev]);
+        setSavedExports((previous) => [saved, ...previous].slice(0, MAX_SAVED_NOTES));
 
         const filename = getExportFilename(receiptLabel, options.downloadFormat);
         if (options.downloadFormat === format) {

@@ -127,7 +127,8 @@ export function SettingsPanel({
         <CardHeader>
           <CardTitle className="font-headline">Minhas Notas</CardTitle>
           <CardDescription>
-            {savedExports.length} nota(s) salva(s) como JPEG ou PDF no navegador.
+            {savedExports.length} de 5 nota(s) salva(s) como JPEG ou PDF no navegador.
+            Ao salvar outra nota com a fila cheia, a mais antiga é removida automaticamente.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-3">

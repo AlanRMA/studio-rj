@@ -36,3 +36,4 @@ export const EMITTER_DATA = {
 } as const;
 
 export const INVOICE_PREVIEW_WIDTH = 600;
+export const MAX_SAVED_NOTES = 5;
