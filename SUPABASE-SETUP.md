@@ -8,7 +8,21 @@ Projeto criado:
 
 A senha do banco é usada apenas pelo Supabase CLI quando solicitada. Não coloque essa senha no site, no GitHub ou nas configurações do frontend.
 
-## 1. Entrar e vincular o projeto
+## Configuração automática (recomendada)
+
+Abra o Terminal nesta pasta e execute:
+
+```sh
+bash scripts/configure-supabase.sh
+```
+
+O script abre o login oficial, solicita a senha do banco ao vincular o projeto, aplica a migration, cria a `APP_ACCESS_KEY` e publica a Edge Function. Ao terminar, ele mostra os dois valores que devem ser cadastrados no site.
+
+A chave também fica em `supabase-app-key.local.txt`, arquivo local ignorado pelo Git.
+
+## Configuração manual
+
+### 1. Entrar e vincular o projeto
 
 Na raiz do repositório:
 
@@ -19,7 +33,7 @@ npx supabase@latest link --project-ref ugpcksezqdbxpgkwursc
 
 O segundo comando poderá solicitar a senha do banco.
 
-## 2. Criar a tabela
+### 2. Criar a tabela
 
 ```sh
 npx supabase@latest db push
@@ -27,7 +41,7 @@ npx supabase@latest db push
 
 A migration cria `public.james_receipts`, ativa RLS e bloqueia acesso direto das chaves públicas. Somente a Edge Function, usando a credencial interna do Supabase, acessa a tabela.
 
-## 3. Criar a chave de acesso do aplicativo
+### 3. Criar a chave de acesso do aplicativo
 
 ```sh
 APP_ACCESS_KEY="$(openssl rand -hex 32)"
@@ -37,7 +51,7 @@ npx supabase@latest secrets set APP_ACCESS_KEY="$APP_ACCESS_KEY"
 
 Guarde o valor exibido. Essa é a chave que será cadastrada nos dois computadores. Não use a senha do banco como chave do aplicativo.
 
-## 4. Publicar a Edge Function
+### 4. Publicar a Edge Function
 
 ```sh
 npx supabase@latest functions deploy receipts --project-ref ugpcksezqdbxpgkwursc --no-verify-jwt
@@ -49,7 +63,7 @@ Endpoint publicado:
 https://ugpcksezqdbxpgkwursc.supabase.co/functions/v1/receipts
 ```
 
-## 5. Configurar o site
+## Configurar o site
 
 Em https://studio-riscos-digitais.vercel.app/ abra **Configurações > Supabase** e informe:
 
