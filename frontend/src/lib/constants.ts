@@ -10,6 +10,9 @@ export const STORAGE_KEYS = {
   valorUnitList: 'jm-notas-valor-unit-list',
   saveFormat: 'jm-notas-save-format',
   savedExports: 'jm-notas-saved-exports',
+  backendUrl: 'jm-notas-backend-url',
+  backendApiKey: 'jm-notas-backend-api-key',
+  pendingReceiptSync: 'jm-notas-pending-receipt-sync',
 } as const;
 
 /** Valores antigos que não devem permanecer como texto preenchido */

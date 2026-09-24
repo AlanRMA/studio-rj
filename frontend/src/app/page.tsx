@@ -6,6 +6,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import type { InvoiceEditorHandle } from '@/components/invoice-editor';
 import {
   CheckCircle2,
+  Database,
   Download,
   FilePlus,
   FileText,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Invoice, SavedExport, SaveFormat } from '@/lib/types';
+import type { SettingsSnapshot } from '@/lib/settings-storage';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -24,7 +26,15 @@ import {
   STORAGE_KEYS,
 } from '@/lib/constants';
 import { generateId } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { calculateItemTotal } from '@/lib/meter-total';
+import {
+  flushPendingReceiptRecords,
+  getReceiptRecord,
+  saveReceiptRecord,
+  searchReceiptRecords,
+  type RemoteReceiptSummary,
+} from '@/lib/receipt-api';
 import {
   captureInvoiceImage,
   downloadDataUrl,
@@ -114,6 +124,7 @@ const Page: FC = () => {
   const [saveSuccess, setSaveSuccess] = useState<{
     clientName: string;
     format: SaveFormat;
+    serverStatus: 'saved' | 'queued' | 'disabled';
   } | null>(null);
 
   const isSaveLocked = isSaving || saveSuccess !== null;
@@ -124,10 +135,32 @@ const Page: FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('editor');
   const [exportToDelete, setExportToDelete] = useState<string | null>(null);
+  const [databaseId, setDatabaseId] = useState('');
+  const [databaseDate, setDatabaseDate] = useState('');
+  const [databaseResults, setDatabaseResults] = useState<RemoteReceiptSummary[]>([]);
+  const [isSearchingDatabase, setIsSearchingDatabase] = useState(false);
+  const [databaseError, setDatabaseError] = useState('');
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    const flush = () => {
+      void flushPendingReceiptRecords().then((synced) => {
+        if (synced > 0) {
+          toast({
+            title: 'Registros sincronizados',
+            description: `${synced} nota(s) pendente(s) foram enviadas ao servidor.`,
+          });
+        }
+      });
+    };
+
+    flush();
+    window.addEventListener('online', flush);
+    return () => window.removeEventListener('online', flush);
+  }, [toast]);
 
   useEffect(() => {
     if (isClient && savedExports.length > MAX_SAVED_NOTES) {
@@ -275,6 +308,7 @@ const Page: FC = () => {
         };
 
         setSavedExports((previous) => [saved, ...previous].slice(0, MAX_SAVED_NOTES));
+        const serverStatus = await saveReceiptRecord(invoice, saved.id, format);
 
         const filename = getExportFilename(receiptLabel, options.downloadFormat);
         if (options.downloadFormat === format) {
@@ -288,6 +322,7 @@ const Page: FC = () => {
         setSaveSuccess({
           clientName: receiptLabel,
           format,
+          serverStatus,
         });
       } catch (error) {
         console.error(error);
@@ -306,7 +341,7 @@ const Page: FC = () => {
   );
 
   const handleSettingsSaved = useCallback(
-    (snapshot: { logo: string | null; saveFormat: SaveFormat }) => {
+    (snapshot: SettingsSnapshot) => {
       setLogo(snapshot.logo);
       setSaveFormat(snapshot.saveFormat);
     },
@@ -383,6 +418,54 @@ const Page: FC = () => {
       saved.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleSearchDatabase = async () => {
+    if (!databaseId.trim() && !databaseDate) {
+      setDatabaseError('Informe um ID ou uma data para pesquisar.');
+      return;
+    }
+
+    setDatabaseError('');
+    setIsSearchingDatabase(true);
+    try {
+      const results = await searchReceiptRecords({
+        id: databaseId,
+        date: databaseDate,
+        limit: 100,
+      });
+      setDatabaseResults(results);
+      if (results.length === 0) {
+        setDatabaseError('Nenhum registro encontrado com esse filtro.');
+      }
+    } catch (error) {
+      setDatabaseResults([]);
+      setDatabaseError(error instanceof Error ? error.message : 'Não foi possível consultar o banco.');
+    } finally {
+      setIsSearchingDatabase(false);
+    }
+  };
+
+  const handleOpenDatabaseReceipt = async (record: RemoteReceiptSummary) => {
+    setDatabaseError('');
+    setIsSearchingDatabase(true);
+    try {
+      const recovered = migrateInvoice(await getReceiptRecord(record.event_id));
+      setInvoices((previous) => {
+        const withoutRecovered = previous.filter((invoice) => invoice.id !== recovered.id);
+        return [recovered, ...withoutRecovered];
+      });
+      setCurrentInvoice(recovered);
+      setActiveTab('editor');
+      toast({
+        title: 'Nota reconstruída',
+        description: `Registro ${record.event_id} carregado com seus dados originais.`,
+      });
+    } catch (error) {
+      setDatabaseError(error instanceof Error ? error.message : 'Não foi possível abrir o registro.');
+    } finally {
+      setIsSearchingDatabase(false);
+    }
+  };
+
   if (!isClient) {
     return null;
   }
@@ -455,10 +538,84 @@ const Page: FC = () => {
           </TabsContent>
 
           <TabsContent value="notas">
+            <Card className="mb-4">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Database className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <h2 className="font-semibold">Buscar no banco de dados</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Pesquise pela identificação do registro, referência da nota ou data de emissão.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] gap-3">
+                  <Input
+                    placeholder="ID ou Ref. da nota"
+                    value={databaseId}
+                    onChange={(event) => setDatabaseId(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') void handleSearchDatabase();
+                    }}
+                  />
+                  <Input
+                    type="date"
+                    aria-label="Data da nota no banco"
+                    value={databaseDate}
+                    onChange={(event) => setDatabaseDate(event.target.value)}
+                  />
+                  <Button
+                    onClick={() => void handleSearchDatabase()}
+                    disabled={isSearchingDatabase}
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    {isSearchingDatabase ? 'Buscando...' : 'Buscar'}
+                  </Button>
+                </div>
+                {databaseError ? (
+                  <p className="text-sm text-destructive">{databaseError}</p>
+                ) : null}
+                {databaseResults.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      {databaseResults.length} registro(s) encontrado(s)
+                    </p>
+                    {databaseResults.map((record) => (
+                      <div
+                        key={record.event_id}
+                        className="border rounded-md p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">
+                            {record.client_name || record.company_name || 'Cliente'}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            Ref: {record.invoice_number} · ID: {record.event_id}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {String(record.issue_date).slice(0, 10).split('-').reverse().join('/')} ·{' '}
+                            {formatCurrency(Number(record.grand_total))}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void handleOpenDatabaseReceipt(record)}
+                          disabled={isSearchingDatabase}
+                        >
+                          Reconstruir nota
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por cliente ou Ref..."
+                placeholder="Filtrar os 5 arquivos recentes deste navegador..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -517,7 +674,11 @@ const Page: FC = () => {
                 <AlertDialogDescription className="mt-1 text-base">
                   O recibo de <strong>{saveSuccess?.clientName}</strong> foi salvo como{' '}
                   <strong>{saveSuccess?.format.toUpperCase()}</strong> em Minhas Notas.
-                  {' Os dados ficam apenas neste navegador.'}
+                  {saveSuccess?.serverStatus === 'saved'
+                    ? ' Os dados também foram registrados no servidor.'
+                    : saveSuccess?.serverStatus === 'queued'
+                      ? ' O envio ao servidor ficou na fila e será repetido automaticamente.'
+                      : ' Configure o servidor para manter o registro no banco de dados.'}
                 </AlertDialogDescription>
               </div>
             </div>

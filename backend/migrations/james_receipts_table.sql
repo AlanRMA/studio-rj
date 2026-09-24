@@ -18,10 +18,18 @@ CREATE TABLE IF NOT EXISTS {{SCHEMA}}.james_receipts (
   item_count            INT NOT NULL,
   export_format         TEXT CHECK (export_format IN ('jpeg', 'pdf')),
   lines                 JSONB NOT NULL,
+  invoice_data          JSONB,
+  template_version      INT NOT NULL DEFAULT 1,
   content_hash          TEXT NOT NULL,
   event_at              TIMESTAMPTZ NOT NULL,
-  ingested_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  ingested_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE {{SCHEMA}}.james_receipts
+  ADD COLUMN IF NOT EXISTS invoice_data JSONB,
+  ADD COLUMN IF NOT EXISTS template_version INT NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 CREATE INDEX IF NOT EXISTS idx_{{SCHEMA}}_james_receipts_responsavel
   ON {{SCHEMA}}.james_receipts (responsavel);
@@ -34,6 +42,9 @@ CREATE INDEX IF NOT EXISTS idx_{{SCHEMA}}_james_receipts_client
 
 CREATE INDEX IF NOT EXISTS idx_{{SCHEMA}}_james_receipts_receipt_id
   ON {{SCHEMA}}.james_receipts (receipt_id);
+
+CREATE INDEX IF NOT EXISTS idx_{{SCHEMA}}_james_receipts_invoice_number
+  ON {{SCHEMA}}.james_receipts (invoice_number);
 
 CREATE INDEX IF NOT EXISTS idx_{{SCHEMA}}_james_receipts_content_hash
   ON {{SCHEMA}}.james_receipts (responsavel, content_hash, event_at DESC);

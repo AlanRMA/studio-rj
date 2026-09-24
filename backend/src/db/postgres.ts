@@ -7,6 +7,13 @@ const { Pool } = pg;
 
 let pool: pg.Pool | null = null;
 
+export interface ReceiptFilters {
+  id?: string;
+  date?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export function isPostgresConfigured(): boolean {
   return Boolean(config.databaseUrl);
 }
@@ -16,9 +23,9 @@ export function getPool(): pg.Pool | null {
   if (!pool) {
     pool = new Pool({
       connectionString: config.databaseUrl,
-      ssl: config.databaseUrl.includes('supabase')
-        ? { rejectUnauthorized: false }
-        : undefined,
+      ssl: config.databaseUrl.includes('localhost') || config.databaseUrl.includes('127.0.0.1')
+        ? undefined
+        : { rejectUnauthorized: false },
       max: 5,
       connectionTimeoutMillis: 5000,
     });
@@ -81,6 +88,25 @@ export async function insertReceipt(payload: IngestReceiptPayload): Promise<void
 
   const { receipt, export: exportMeta, event_id, event_at } = payload;
   const contentHash = buildContentHash(payload);
+  const invoiceData = {
+    id: receipt.id,
+    invoiceNumber: receipt.invoice_number,
+    clientName: receipt.client_name ?? '',
+    service: receipt.service_type ?? '',
+    issueDate: receipt.issue_date,
+    companyName: receipt.company_name ?? '',
+    deliveryFee: receipt.delivery_fee,
+    adjustment: receipt.adjustment,
+    items: receipt.lines.map((line) => ({
+      id: line.line_id,
+      ref: line.ref ?? '',
+      description: line.descricao,
+      quantity: line.quantity,
+      unitPrice: line.unit_price,
+      isRisk: line.is_risk,
+      total: line.line_total,
+    })),
+  };
 
   await activePool.query(
     `INSERT INTO ${config.receiptsTable} (
@@ -89,14 +115,14 @@ export async function insertReceipt(payload: IngestReceiptPayload): Promise<void
       emitter_legal_name, emitter_document,
       delivery_fee, adjustment,
       subtotal, grand_total, item_count, export_format,
-      lines, content_hash, event_at
+      lines, invoice_data, template_version, content_hash, event_at
     ) VALUES (
       $1, $2, $3, $4, $5,
       $6, $7, $8,
       $9, $10,
       $11, $12,
       $13, $14, $15, $16,
-      $17, $18, $19
+      $17, $18, $19, $20, $21
     )
     ON CONFLICT (event_id) DO NOTHING`,
     [
@@ -117,34 +143,59 @@ export async function insertReceipt(payload: IngestReceiptPayload): Promise<void
       receipt.totals.item_count,
       exportMeta.format,
       JSON.stringify(receipt.lines),
+      JSON.stringify(invoiceData),
+      1,
       contentHash,
       event_at,
     ]
   );
 }
 
-export async function listReceipts(limit = 20): Promise<Record<string, unknown>[]> {
+export async function listReceipts(filters: ReceiptFilters = {}): Promise<Record<string, unknown>[]> {
   const activePool = getPool();
   if (!activePool) throw new Error('Postgres não configurado');
 
+  const values: unknown[] = [config.responsavel];
+  const where = ['responsavel = $1'];
+
+  if (filters.id) {
+    values.push(filters.id);
+    where.push(`(event_id = $${values.length} OR receipt_id = $${values.length} OR invoice_number = $${values.length})`);
+  }
+
+  if (filters.date) {
+    values.push(filters.date);
+    where.push(`issue_date = $${values.length}`);
+  }
+
+  values.push(Math.min(Math.max(filters.limit ?? 50, 1), 200));
+  const limitParam = `$${values.length}`;
+  values.push(Math.max(filters.offset ?? 0, 0));
+  const offsetParam = `$${values.length}`;
+
   const result = await activePool.query(
-    `SELECT event_id, responsavel, client_name, company_name, grand_total, issue_date, export_format, ingested_at
+    `SELECT event_id, receipt_id, invoice_number, responsavel, client_name, company_name,
+            service_type, grand_total, issue_date, export_format, event_at, ingested_at
      FROM ${config.receiptsTable}
-     WHERE responsavel = $1
+     WHERE ${where.join(' AND ')}
      ORDER BY ingested_at DESC
-     LIMIT $2`,
-    [config.responsavel, limit]
+     LIMIT ${limitParam} OFFSET ${offsetParam}`,
+    values
   );
   return result.rows;
 }
 
-export async function getReceipt(eventId: string): Promise<Record<string, unknown> | null> {
+export async function getReceipt(id: string): Promise<Record<string, unknown> | null> {
   const activePool = getPool();
   if (!activePool) throw new Error('Postgres não configurado');
 
   const result = await activePool.query(
-    `SELECT * FROM ${config.receiptsTable} WHERE event_id = $1 AND responsavel = $2`,
-    [eventId, config.responsavel]
+    `SELECT * FROM ${config.receiptsTable}
+     WHERE responsavel = $2
+       AND (event_id = $1 OR receipt_id = $1 OR invoice_number = $1)
+     ORDER BY ingested_at DESC
+     LIMIT 1`,
+    [id, config.responsavel]
   );
   return result.rows[0] ?? null;
 }

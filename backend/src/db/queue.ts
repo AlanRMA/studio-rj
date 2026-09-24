@@ -106,6 +106,10 @@ export class ReceiptQueue {
     return this.store.recent_events.some((event) => event.event_id === eventId);
   }
 
+  isPending(eventId: string): boolean {
+    return this.store.pending.some((item) => item.event_id === eventId);
+  }
+
   recordEvent(eventId: string, receiptId: string, contentHash: string, eventAt: string): void {
     if (!this.hasEvent(eventId)) {
       this.store.recent_events.push({

@@ -142,7 +142,7 @@ async function main() {
     lines: readOne.lines,
   });
 
-  const list = await listReceipts(5);
+  const list = await listReceipts({ limit: 5 });
   log('5. READ lista (últimos 5)', list);
 
   const updated = await updateReceiptClientName(eventId, 'Cliente Atualizado CRUD');

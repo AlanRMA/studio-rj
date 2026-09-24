@@ -13,7 +13,7 @@ import { buildContentHash } from './hash.js';
 export type IngestResult =
   | { status: 'created'; queued: boolean }
   | { status: 'duplicate'; message: string }
-  | { status: 'idempotent' };
+  | { status: 'idempotent'; queued: boolean };
 
 export async function ingestReceipt(
   payload: IngestReceiptPayload,
@@ -22,7 +22,7 @@ export async function ingestReceipt(
   const contentHash = buildContentHash(payload);
 
   if (queue.hasEvent(payload.event_id)) {
-    return { status: 'idempotent' };
+    return { status: 'idempotent', queued: queue.isPending(payload.event_id) };
   }
 
   const localDuplicate = queue.findRapidDuplicate(
@@ -48,7 +48,7 @@ export async function ingestReceipt(
         contentHash,
         payload.event_at
       );
-      return { status: 'idempotent' };
+      return { status: 'idempotent', queued: false };
     }
 
     const pgDuplicate = await findPgRapidDuplicate(

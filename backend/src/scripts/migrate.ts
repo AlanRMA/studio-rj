@@ -28,7 +28,7 @@ function assertEnvConfigured(): void {
         'Passos:\n' +
         '  1. cd backend\n' +
         '  2. cp .env.example .env\n' +
-        '  3. Cole a mesma DATABASE_URL do backend da Rosania\n' +
+        '  3. Informe a DATABASE_URL do PostgreSQL (Render ou local)\n' +
         '  4. npm run migrate:all'
     );
   }
@@ -37,7 +37,7 @@ function assertEnvConfigured(): void {
     throw new Error(
       'DATABASE_URL está vazia no .env\n\n' +
         `Edite o arquivo: ${envPath}\n` +
-        'Use a mesma connection string do Supabase que funciona no backend da Rosania.'
+        'Use a connection string do PostgreSQL criada para este serviço.'
     );
   }
 }
@@ -50,16 +50,17 @@ async function migrateSchema(pool: pg.Pool, schema: SchemaName) {
 export async function migrate(target?: AppEnv): Promise<void> {
   assertEnvConfigured();
 
+  const databaseHost = new URL(config.databaseUrl).hostname;
   const pool = new pg.Pool({
     connectionString: config.databaseUrl,
-    ssl: config.databaseUrl.includes('supabase')
+    ssl: !['localhost', '127.0.0.1'].includes(databaseHost)
       ? { rejectUnauthorized: false }
       : undefined,
   });
 
   try {
     await pool.query('SELECT 1');
-    console.log('Conexão com Supabase OK.');
+    console.log('Conexão com PostgreSQL OK.');
 
     const schemas: SchemaName[] =
       target === 'production'
@@ -76,18 +77,18 @@ export async function migrate(target?: AppEnv): Promise<void> {
 
     if (message.includes('password authentication failed')) {
       throw new Error(
-        'Falha de autenticação no Supabase.\n' +
+        'Falha de autenticação no PostgreSQL.\n' +
           '- Verifique a senha em DATABASE_URL\n' +
           '- Se a senha tem caracteres especiais (@, #, /), use a versão URL-encoded\n' +
-          '- No Supabase: Project Settings → Database → Connection string (URI)'
+          '- No Render: abra o PostgreSQL e copie a Internal Database URL'
       );
     }
 
     if (message.includes('ENOTFOUND') || message.includes('ECONNREFUSED')) {
       throw new Error(
         'Não foi possível conectar ao host do banco.\n' +
-          '- Confira se DATABASE_URL está completa\n' +
-          '- Tente a URI do pooler: ...pooler.supabase.com:5432/postgres'
+        '- Confira se DATABASE_URL está completa\n' +
+          '- Em produção no Render, prefira a Internal Database URL'
       );
     }
 

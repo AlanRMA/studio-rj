@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Download, Save, Trash2 } from 'lucide-react';
+import { Download, Save, Server, Trash2 } from 'lucide-react';
 import type { Invoice, SavedExport, SaveFormat } from '@/lib/types';
 import { loadSettingsSnapshot, saveSettingsSnapshot, type SettingsSnapshot } from '@/lib/settings-storage';
 import { LogoUploader } from '@/components/logo-uploader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
@@ -21,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { testReceiptApi } from '@/lib/receipt-api';
 
 interface SettingsPanelProps {
   invoices: Invoice[];
@@ -40,6 +42,7 @@ export function SettingsPanel({
   const { toast } = useToast();
   const [draft, setDraft] = useState<SettingsSnapshot>(() => loadSettingsSnapshot());
   const [savedDraft, setSavedDraft] = useState<SettingsSnapshot>(() => loadSettingsSnapshot());
+  const [isTestingServer, setIsTestingServer] = useState(false);
 
   useEffect(() => {
     const snapshot = loadSettingsSnapshot();
@@ -57,6 +60,28 @@ export function SettingsPanel({
       title: 'Configurações salvas',
       description: 'Suas alterações foram aplicadas.',
     });
+  };
+
+  const handleTestServer = async () => {
+    setIsTestingServer(true);
+    try {
+      const ok = await testReceiptApi(draft.backendUrl, draft.backendApiKey);
+      toast({
+        title: ok ? 'Servidor conectado' : 'Servidor indisponível',
+        description: ok
+          ? 'A API respondeu corretamente. As próximas notas serão registradas no banco.'
+          : 'A API não confirmou o estado esperado.',
+        variant: ok ? 'default' : 'destructive',
+      });
+    } catch (error) {
+      toast({
+        title: 'Não foi possível conectar',
+        description: error instanceof Error ? error.message : 'Revise a URL e a chave de acesso.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTestingServer(false);
+    }
   };
 
   const handleDownloadDrafts = () => {
@@ -125,10 +150,56 @@ export function SettingsPanel({
 
       <Card>
         <CardHeader>
+          <CardTitle className="font-headline flex items-center gap-2">
+            <Server className="h-5 w-5" /> Servidor de Registros
+          </CardTitle>
+          <CardDescription>
+            O servidor guarda somente os dados das notas. JPEG e PDF são reconstruídos quando necessário.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="backend-url">URL da API no Render</Label>
+            <Input
+              id="backend-url"
+              type="url"
+              placeholder="https://receipt-backend-james.onrender.com"
+              value={draft.backendUrl}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, backendUrl: event.target.value }))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="backend-api-key">Chave de acesso</Label>
+            <Input
+              id="backend-api-key"
+              type="password"
+              autoComplete="off"
+              placeholder="Chave configurada no Render"
+              value={draft.backendApiKey}
+              onChange={(event) =>
+                setDraft((current) => ({ ...current, backendApiKey: event.target.value }))
+              }
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void handleTestServer()}
+            disabled={isTestingServer || !draft.backendUrl.trim() || !draft.backendApiKey.trim()}
+          >
+            {isTestingServer ? 'Testando...' : 'Testar conexão'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="font-headline">Minhas Notas</CardTitle>
           <CardDescription>
-            {savedExports.length} de 5 nota(s) salva(s) como JPEG ou PDF no navegador.
-            Ao salvar outra nota com a fila cheia, a mais antiga é removida automaticamente.
+            {savedExports.length} de 5 arquivo(s) recente(s) no navegador. O banco mantém todos os
+            registros sincronizados sem guardar as imagens.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-3">

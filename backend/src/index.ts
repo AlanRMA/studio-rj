@@ -28,7 +28,10 @@ app.get('/', (_req, res) => {
     responsavel: config.responsavel,
     endpoints: {
       health: '/api/v1/ingest/health',
+      authCheck: 'GET /api/v1/ingest/auth-check',
       ingest: 'POST /api/v1/ingest/james/receipt',
+      search: 'GET /api/v1/ingest/james/receipts?id=&date=',
+      detail: 'GET /api/v1/ingest/james/receipts/:id',
     },
   });
 });

@@ -4,6 +4,7 @@ services:
     runtime: node
     rootDir: backend
     plan: 0.5c-512mb
+    region: virginia
     buildCommand: npm ci && npm run build
     preDeployCommand: npm run migrate:prod
     startCommand: npm start

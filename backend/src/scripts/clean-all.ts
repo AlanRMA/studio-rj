@@ -17,7 +17,7 @@ async function cleanAll() {
 
   console.log(`Limpando ${config.receiptsTable} (${config.appEnv})...`);
 
-  const receipts = await listReceipts(5000);
+  const receipts = await listReceipts({ limit: 5000 });
   for (const row of receipts) {
     await deleteReceipt(row.event_id as string);
   }

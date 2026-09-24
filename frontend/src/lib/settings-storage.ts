@@ -14,6 +14,8 @@ export interface SettingsSnapshot {
   descricaoItems: string[];
   empresaItems: string[];
   valorUnitItems: string[];
+  backendUrl: string;
+  backendApiKey: string;
 }
 
 function readJson<T>(key: string, fallback: T): T {
@@ -61,6 +63,8 @@ export function loadSettingsSnapshot(): SettingsSnapshot {
     descricaoItems: stripLegacyDefaults(descricaoRaw, LEGACY_DEFAULT_DESCRICAO),
     empresaItems: readJson(STORAGE_KEYS.empresaList, ensureNovoPlusLast(DEFAULT_EMPRESA_ITEMS)),
     valorUnitItems: stripLegacyDefaults(valorUnitRaw, LEGACY_DEFAULT_VALOR_UNIT),
+    backendUrl: readJson<string>(STORAGE_KEYS.backendUrl, ''),
+    backendApiKey: readJson<string>(STORAGE_KEYS.backendApiKey, ''),
   };
 }
 
@@ -70,4 +74,6 @@ export function saveSettingsSnapshot(snapshot: SettingsSnapshot): void {
   writeJson(STORAGE_KEYS.descricaoList, ensureNovoPlusLast(snapshot.descricaoItems));
   writeJson(STORAGE_KEYS.empresaList, ensureNovoPlusLast(snapshot.empresaItems));
   writeJson(STORAGE_KEYS.valorUnitList, ensureNovoPlusLast(snapshot.valorUnitItems));
+  writeJson(STORAGE_KEYS.backendUrl, snapshot.backendUrl.trim().replace(/\/$/, ''));
+  writeJson(STORAGE_KEYS.backendApiKey, snapshot.backendApiKey.trim());
 }

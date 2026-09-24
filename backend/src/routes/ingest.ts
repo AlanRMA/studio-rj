@@ -28,6 +28,12 @@ function authorize(req: Request, res: Response): boolean {
   return true;
 }
 
+function parseIntegerQuery(value: unknown, fallback: number, max: number): number {
+  const parsed = typeof value === 'string' ? Number.parseInt(value, 10) : fallback;
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(Math.max(parsed, 0), max);
+}
+
 export function createIngestRouter(queue: ReceiptQueue): Router {
   const router = Router();
 
@@ -51,6 +57,11 @@ export function createIngestRouter(queue: ReceiptQueue): Router {
         pending: queue.pendingCount(),
       },
     });
+  });
+
+  router.get('/auth-check', (req, res) => {
+    if (!authorize(req, res)) return;
+    res.json({ ok: true });
   });
 
   router.post('/james/receipt', async (req, res) => {
@@ -87,6 +98,7 @@ export function createIngestRouter(queue: ReceiptQueue): Router {
           ok: true,
           status: 'idempotent',
           event_id: parsed.data.event_id,
+          queued: result.queued,
         });
         return;
       }
@@ -114,8 +126,16 @@ export function createIngestRouter(queue: ReceiptQueue): Router {
     if (!authorize(req, res)) return;
 
     try {
-      const limit = Math.min(Number(req.query.limit ?? 20), 100);
-      const receipts = await listReceipts(limit);
+      const id = typeof req.query.id === 'string' ? req.query.id.trim() : undefined;
+      const date = typeof req.query.date === 'string' ? req.query.date.trim() : undefined;
+      if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        res.status(400).json({ error: 'date deve usar o formato YYYY-MM-DD' });
+        return;
+      }
+
+      const limit = Math.max(parseIntegerQuery(req.query.limit, 50, 200), 1);
+      const offset = parseIntegerQuery(req.query.offset, 0, Number.MAX_SAFE_INTEGER);
+      const receipts = await listReceipts({ id: id || undefined, date: date || undefined, limit, offset });
       res.json({ ok: true, count: receipts.length, receipts });
     } catch (error) {
       console.error('[read] Erro ao listar:', error);
