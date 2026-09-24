@@ -151,7 +151,7 @@ const Page: FC = () => {
         if (synced > 0) {
           toast({
             title: 'Registros sincronizados',
-            description: `${synced} nota(s) pendente(s) foram enviadas ao servidor.`,
+            description: `${synced} nota(s) pendente(s) foram enviadas ao Supabase.`,
           });
         }
       });
@@ -545,13 +545,13 @@ const Page: FC = () => {
                   <div>
                     <h2 className="font-semibold">Buscar no banco de dados</h2>
                     <p className="text-sm text-muted-foreground">
-                      Pesquise pela identificação do registro, referência da nota ou data de emissão.
+                      Pesquise pelo ID exato, pelo início da referência ou pela data de emissão.
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] gap-3">
                   <Input
-                    placeholder="ID ou Ref. da nota"
+                    placeholder="ID ou início da Ref."
                     value={databaseId}
                     onChange={(event) => setDatabaseId(event.target.value)}
                     onKeyDown={(event) => {
@@ -675,10 +675,10 @@ const Page: FC = () => {
                   O recibo de <strong>{saveSuccess?.clientName}</strong> foi salvo como{' '}
                   <strong>{saveSuccess?.format.toUpperCase()}</strong> em Minhas Notas.
                   {saveSuccess?.serverStatus === 'saved'
-                    ? ' Os dados também foram registrados no servidor.'
+                    ? ' Os dados também foram registrados no Supabase.'
                     : saveSuccess?.serverStatus === 'queued'
-                      ? ' O envio ao servidor ficou na fila e será repetido automaticamente.'
-                      : ' Configure o servidor para manter o registro no banco de dados.'}
+                      ? ' O envio ao Supabase ficou na fila e será repetido automaticamente.'
+                      : ' Configure o Supabase para manter o registro no banco de dados.'}
                 </AlertDialogDescription>
               </div>
             </div>

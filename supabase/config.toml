@@ -1,0 +1,4 @@
+project_id = "studio-rj"
+
+[functions.receipts]
+verify_jwt = false

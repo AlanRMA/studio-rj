@@ -42,6 +42,12 @@ interface ReceiptApiConfig {
   apiKey: string;
 }
 
+function getFunctionBaseUrl(url: string): string {
+  const normalized = url.trim().replace(/\/$/, '');
+  if (normalized.endsWith('/functions/v1/receipts')) return normalized;
+  return `${normalized}/functions/v1/receipts`;
+}
+
 interface ReceiptPayload {
   source_system: 'studio-rm-james';
   event_type: 'receipt.saved';
@@ -109,15 +115,15 @@ async function apiFetch<T>(
 ): Promise<T> {
   const config = configOverride ?? getApiConfig();
   if (!config) {
-    throw new Error('Configure a URL e a chave do servidor em Configurações.');
+    throw new Error('Configure a URL e a chave do Supabase em Configurações.');
   }
 
-  const response = await fetch(`${config.url}${path}`, {
+  const response = await fetch(`${getFunctionBaseUrl(config.url)}${path}`, {
     ...init,
     signal: init?.signal ?? AbortSignal.timeout(10_000),
     headers: {
       Accept: 'application/json',
-      Authorization: `Bearer ${config.apiKey}`,
+      'X-App-Key': config.apiKey,
       ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
       ...init?.headers,
     },
@@ -125,7 +131,7 @@ async function apiFetch<T>(
 
   const body = (await response.json().catch(() => ({}))) as T & { error?: string };
   if (!response.ok) {
-    throw new Error(body.error || `O servidor respondeu com erro ${response.status}.`);
+    throw new Error(body.error || `O Supabase respondeu com erro ${response.status}.`);
   }
   return body;
 }

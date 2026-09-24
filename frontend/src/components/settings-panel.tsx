@@ -67,10 +67,10 @@ export function SettingsPanel({
     try {
       const ok = await testReceiptApi(draft.backendUrl, draft.backendApiKey);
       toast({
-        title: ok ? 'Servidor conectado' : 'Servidor indisponível',
+        title: ok ? 'Supabase conectado' : 'Supabase indisponível',
         description: ok
-          ? 'A API respondeu corretamente. As próximas notas serão registradas no banco.'
-          : 'A API não confirmou o estado esperado.',
+          ? 'A Edge Function respondeu corretamente. As próximas notas serão registradas no banco.'
+          : 'A Edge Function não confirmou o estado esperado.',
         variant: ok ? 'default' : 'destructive',
       });
     } catch (error) {
@@ -151,19 +151,19 @@ export function SettingsPanel({
       <Card>
         <CardHeader>
           <CardTitle className="font-headline flex items-center gap-2">
-            <Server className="h-5 w-5" /> Servidor de Registros
+            <Server className="h-5 w-5" /> Supabase
           </CardTitle>
           <CardDescription>
-            O servidor guarda somente os dados das notas. JPEG e PDF são reconstruídos quando necessário.
+            O Supabase guarda somente os dados das notas. JPEG e PDF são reconstruídos quando necessário.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="backend-url">URL da API no Render</Label>
+            <Label htmlFor="backend-url">URL do projeto Supabase</Label>
             <Input
               id="backend-url"
               type="url"
-              placeholder="https://receipt-backend-james.onrender.com"
+              placeholder="https://seu-projeto.supabase.co"
               value={draft.backendUrl}
               onChange={(event) =>
                 setDraft((current) => ({ ...current, backendUrl: event.target.value }))
@@ -171,12 +171,12 @@ export function SettingsPanel({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="backend-api-key">Chave de acesso</Label>
+            <Label htmlFor="backend-api-key">Chave de acesso do aplicativo</Label>
             <Input
               id="backend-api-key"
               type="password"
               autoComplete="off"
-              placeholder="Chave configurada no Render"
+              placeholder="Valor do segredo APP_ACCESS_KEY"
               value={draft.backendApiKey}
               onChange={(event) =>
                 setDraft((current) => ({ ...current, backendApiKey: event.target.value }))
@@ -189,7 +189,7 @@ export function SettingsPanel({
             onClick={() => void handleTestServer()}
             disabled={isTestingServer || !draft.backendUrl.trim() || !draft.backendApiKey.trim()}
           >
-            {isTestingServer ? 'Testando...' : 'Testar conexão'}
+            {isTestingServer ? 'Testando...' : 'Testar Supabase'}
           </Button>
         </CardContent>
       </Card>
